@@ -1,21 +1,24 @@
 #!/bin/bash
 # coding=utf-8
 
-grpc_root="/opt/grpc_v1.24.3"
+set -euo pipefail
 
-PROTOC="$grpc_root/third_party/protobuf/src/protoc"
-PLUGIN="--plugin=protoc-gen-grpc=$grpc_root/bins/opt/grpc_cpp_plugin"
+cwd="$(dirname "$(realpath "$0")")"
+grpc_root="${GRPC_ROOT:-/opt/grpc_v1.24.3}"
 
-if [ ! -x ${PROTOC} ]; then
-    echo "${PROTOC}; no such file."
-    exit 1
-fi
+PROTOC="${PROTOC:-${grpc_root}/build/third_party/protobuf/protoc}"
+PLUGIN="--plugin=protoc-gen-grpc=${GRPC_PLUGIN:-${grpc_root}/build/grpc_cpp_plugin}"
+
+[ ! -x "$(command -v "${PROTOC}" 2> /dev/null)" ] \
+	&& echo "${PROTOC}: executable not found" \
+	&& exit 1
 
 echo "Generating sarmata C++ protobuf/grpc sources..."
-path_i="../proto"
-path_o="libsarmata-client"
-${PROTOC}   -I${path_i} \
-            ${PLUGIN} \
-            --cpp_out=${path_o} \
-            --grpc_out=${path_o} \
-            ${path_i}/sarmata_asr.proto
+path_i="${cwd}/../proto"
+path_o="${cwd}/libsarmata-client"
+${PROTOC} \
+	-I"${path_i}" \
+	"${PLUGIN}" \
+	--cpp_out="${path_o}" \
+	--grpc_out="${path_o}" \
+	"${path_i}/sarmata_asr.proto"
